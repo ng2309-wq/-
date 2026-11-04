@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>구구단 연습장 · 실전 리더보드</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Malgun Gothic", sans-serif; color: #34405a; background: #f9f7ff; font-size: 18px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 8% 9%, #ffe4ec 0, transparent 28%), radial-gradient(circle at 94% 8%, #e3f4ff 0, transparent 30%), #f9f7ff; }
+    button, input { font: inherit; }
+    button { cursor: pointer; border: 0; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #6a75cc; outline-offset: 3px; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .wrap { width: min(1100px, calc(100% - 28px)); margin: 28px auto 50px; }
+    header { text-align: center; padding: 14px 8px 22px; }
+    h1 { font-size: clamp(1.75rem, 4vw, 2.55rem); margin: 0 0 8px; letter-spacing: -.05em; }
+    header p { margin: 0; color: #68748b; }
+    h2 { margin: 0 0 14px; font-size: 1.22rem; }
+    h3 { margin: 0 0 10px; font-size: 1.06rem; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .85fr); gap: 20px; align-items: start; }
+    .card { border-radius: 27px; padding: 23px; background: rgba(255,255,255,.94); box-shadow: 0 12px 36px #75809c16; border: 1px solid #f0edf7; }
+    .side { display: grid; gap: 20px; }
+    .modes, .dan-grid { display: grid; gap: 9px; }
+    .modes { grid-template-columns: repeat(3, 1fr); }
+    .dan-grid { grid-template-columns: repeat(4, 1fr); margin-top: 12px; }
+    .mode, .dan { padding: 12px 7px; border-radius: 16px; background: #f1ecfc; color: #44416b; font-weight: 750; min-height: 50px; }
+    .mode:nth-child(2) { background: #e6f5ef; color: #305e52; }
+    .mode:nth-child(3) { background: #ffe8df; color: #744d42; }
+    .dan { background: #eaf1ff; color: #415883; }
+    .mode[aria-pressed="true"], .dan[aria-pressed="true"] { background: #7774cd; color: white; box-shadow: 0 5px 0 #5653a7; }
+    .mode:nth-child(3)[aria-pressed="true"] { background: #e17d86; box-shadow: 0 5px 0 #b75b63; }
+    .meta { color: #627088; font-size: .94rem; line-height: 1.5; margin: 15px 0 0; }
+    .game { margin-top: 20px; text-align: center; }
+    .game-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .badge { border-radius: 99px; background: #edf5ff; padding: 8px 14px; font-weight: 750; }
+    .badge.time { background: #fff0df; color: #8c4d35; }
+    .badge.time.urgent { background: #ffe2e6; color: #b83650; }
+    .question { display: grid; place-items: center; min-height: 118px; margin: 4px 0 10px; border-radius: 23px; background: #f4f1ff; font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 850; letter-spacing: .02em; color: #485188; font-variant-numeric: tabular-nums; }
+    .feedback { min-height: 2.8em; margin: 8px 0; font-weight: 700; line-height: 1.35; color: #365f52; }
+    .feedback.bad { color: #b24760; }
+    .answer-row { display: flex; justify-content: center; gap: 10px; max-width: 390px; margin: 0 auto 12px; }
+    .answer-row input { width: 50%; min-width: 0; text-align: center; border-radius: 16px; border: 2px solid #d8d9eb; padding: 12px; background: #fff; font-weight: 750; font-size: 1.4rem; }
+    .primary { background: #7875cc; color: white; border-radius: 16px; padding: 12px 21px; font-weight: 800; box-shadow: 0 5px 0 #5956aa; min-height: 54px; }
+    .primary:active:not(:disabled), .mode:active:not(:disabled), .dan:active:not(:disabled) { transform: translateY(2px); }
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 340px; margin: 0 auto; }
+    .key { border-radius: 15px; min-height: 53px; background: #eaf3fa; color: #354c6a; font-weight: 800; font-size: 1.2rem; }
+    .key.action { background: #ffede8; font-size: 1rem; }
+    .stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; color: #59657d; font-weight: 700; }
+    .stats span { background: #f7f7fc; border-radius: 99px; padding: 8px 12px; }
+    .result { text-align: center; background: #fff4e9; border-radius: 20px; padding: 18px; margin-top: 16px; }
+    .result p { margin: 8px 0; }
+    .record-form { display: grid; gap: 10px; max-width: 360px; margin: 14px auto 0; }
+    .record-form label { text-align: left; font-weight: 800; }
+    .record-form input { width: 100%; border: 2px solid #e0d9ec; border-radius: 14px; padding: 12px; background: white; }
+    .form-message { font-size: .9rem; margin: 0; min-height: 1.3em; color: #755a6c; }
+    .leader-top { display: flex; align-items: center; justify-content: space-between; gap: 7px; }
+    .refresh { border-radius: 12px; padding: 9px 11px; background: #e8f4ef; font-size: .88rem; font-weight: 750; white-space: nowrap; }
+    .connection { color: #66738a; font-size: .86rem; margin: 0 0 12px; line-height: 1.45; }
+    .ranking { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+    .ranking li { display: grid; grid-template-columns: 35px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 11px; background: #f7f6ff; border-radius: 14px; }
+    .rank { color: #686aa0; font-weight: 850; text-align: center; }
+    .name { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+    .points { font-weight: 850; white-space: nowrap; color: #6652a2; }
+    .empty { color: #68748b; line-height: 1.5; margin: 6px 0; }
+    .note { margin: 0; color: #68748b; font-size: .86rem; line-height: 1.55; }
+    [hidden] { display: none !important; }
+    @media (max-width: 780px) { .layout { grid-template-columns: 1fr; } .wrap { margin-top: 12px; } .card { padding: 18px; } }
+    @media (max-width: 380px) { .mode { font-size: .88rem; } .answer-row .primary { padding-inline: 12px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><h1>구구단 연습장</h1><p>2단부터 9단까지, 재미있게 익혀요!</p></header>
+    <main class="layout">
+      <div>
+        <section class="card" aria-labelledby="select-title">
+          <h2 id="select-title">연습 방법 고르기</h2>
+          <div class="modes">
+            <button class="mode" data-mode="dan" aria-pressed="true" type="button">단 선택</button>
+            <button class="mode" data-mode="random" aria-pressed="false" type="button">랜덤 연습</button>
+            <button class="mode" data-mode="challenge" aria-pressed="false" type="button">60초 실전</button>
+          </div>
+          <div id="dan-wrap" class="dan-grid" aria-label="연습할 단 선택"></div>
+          <p id="mode-description" class="meta">연습할 단을 고르고 시작해 보세요.</p>
+        </section>
+        <section class="card game" aria-label="구구단 문제">
+          <div class="game-head">
+            <span class="badge" id="mode-label">2단 연습</span>
+            <span class="badge time" id="clock" hidden>남은 시간 60초</span>
+          </div>
+          <div id="question" class="question">준비됐나요?</div>
+          <p id="feedback" class="feedback" aria-live="polite">시작 버튼을 눌러 주세요.</p>
+          <button type="button" id="start" class="primary">시작하기</button>
+          <div id="answer-area" hidden>
+            <div class="answer-row">
+              <input id="answer" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*" maxlength="3" aria-label="곱셈 정답">
+              <button type="button" class="primary" id="submit-answer">확인</button>
+            </div>
+            <div class="keypad" id="keypad" aria-label="숫자 입력판">
+              <button class="key" type="button" data-key="1">1</button><button class="key" type="button" data-key="2">2</button><button class="key" type="button" data-key="3">3</button>
+              <button class="key" type="button" data-key="4">4</button><button class="key" type="button" data-key="5">5</button><button class="key" type="button" data-key="6">6</button>
+              <button class="key" type="button" data-key="7">7</button><button class="key" type="button" data-key="8">8</button><button class="key" type="button" data-key="9">9</button>
+              <button class="key action" type="button" data-key="clear">지우기</button><button class="key" type="button" data-key="0">0</button><button class="key action" type="button" data-key="back">←</button>
+            </div>
+          </div>
+          <div class="stats"><span id="correct-count">맞힌 문제 0</span><span id="wrong-count">틀린 문제 0</span></div>
+          <div id="result" class="result" hidden>
+            <h2 id="result-title">실전 종료!</h2>
+            <p id="result-detail"></p>
+            <form id="record-form" class="record-form" hidden>
+              <label for="nickname">리더보드에 올릴 이름</label>
+              <input id="nickname" type="text" maxlength="12" autocomplete="nickname" placeholder="예: 구구왕" aria-describedby="name-help">
+              <p id="name-help" class="form-message">한글·영문·숫자로 시작, 최대 12글자. 공백·_·-는 뒤쪽에 사용 가능해요.</p>
+              <button id="save-record" class="primary" type="submit">내 점수 등록하기</button>
+              <p id="save-message" class="form-message" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </section>
+      </div>
+      <aside class="side">
+        <section id="leaderboard-card" class="card" hidden aria-labelledby="leader-title">
+          <div class="leader-top"><h2 id="leader-title">실전 리더보드</h2><button class="refresh" type="button" id="refresh">새로고침</button></div>
+          <p id="connection" class="connection" role="status">Firebase에 연결하는 중…</p>
+          <ol id="ranking" class="ranking" aria-label="점수 순위"></ol>
+          <p id="ranking-empty" class="empty">기록을 불러오는 중이에요.</p>
+          <p class="note" style="margin-top: 14px">상위 20개 기록 · 점수는 60초 동안 맞힌 문제 수예요. 이름에 개인 정보를 쓰지 마세요.</p>
+        </section>
+        <section class="card" aria-labelledby="guide-title">
+          <h2 id="guide-title">어떻게 하나요?</h2>
+          <p class="note">단 선택 또는 랜덤 연습은 시간 제한이 없어요. 실전은 2단~9단에서 문제가 랜덤으로 나오며 60초 후 자동으로 끝나요.</p>
+          <p class="note" style="margin-top: 10px">숫자 입력판이나 키보드로 답하고 <strong>확인</strong>을 누르세요. 실전이 끝난 뒤에만 점수를 등록할 수 있어요.</p>
+        </section>
+      </aside>
+    </main>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      // 공개 가능한 Firebase 웹 앱 설정입니다. 리더보드 접근 권한은 Firestore 규칙에서 관리합니다.
+      const firebaseConfig = {
+        apiKey: 'AIzaSyC1rJuEUQ74abQdQj09W9kUWoK_F55rJhk',
+        authDomain: 'ngtest12345-44397.firebaseapp.com',
+        projectId: 'ngtest12345-44397',
+        storageBucket: 'ngtest12345-44397.firebasestorage.app',
+        messagingSenderId: '804014586555',
+        appId: '1:804014586555:web:304a8c67a0d098e881c79e',
+        measurementId: 'G-QH1MR9ENX4'
+      };
+      const $ = (id) => document.getElementById(id);
+      const ui = {
+        danWrap: $('dan-wrap'), description: $('mode-description'), modeLabel: $('mode-label'), clock: $('clock'),
+        question: $('question'), feedback: $('feedback'), start: $('start'), answerArea: $('answer-area'), answer: $('answer'),
+        correct: $('correct-count'), wrong: $('wrong-count'), result: $('result'), resultTitle: $('result-title'), resultDetail: $('result-detail'),
+        recordForm: $('record-form'), nickname: $('nickname'), save: $('save-record'), saveMessage: $('save-message'),
+        leaderboard: $('leaderboard-card'), connection: $('connection'), ranking: $('ranking'), rankingEmpty: $('ranking-empty')
+      };
+      const state = { mode: 'dan', dan: 2, active: false, finished: false, correct: 0, wrong: 0, question: null, previous: '', endAt: 0, timer: null, round: 0, saving: false, saved: false };
+      let firestore = null;
+      let liveUnsubscribe = null;
+      const nameRule = /^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _-]{0,11}$/;
+      function setFeedback(message, bad = false) { ui.feedback.textContent = message; ui.feedback.classList.toggle('bad', bad); }
+      function updateCounts() { ui.correct.textContent = `맞힌 문제 ${state.correct}`; ui.wrong.textContent = `틀린 문제 ${state.wrong}`; }
+      function selectMode(mode, dan = state.dan) {
+        clearInterval(state.timer); state.timer = null;
+        state.mode = mode; state.dan = dan; state.active = false; state.finished = false;
+        state.question = null; state.previous = ''; state.correct = 0; state.wrong = 0; state.round++;
+        state.saving = false; state.saved = false;
+        ui.start.hidden = false; ui.start.textContent = '시작하기'; ui.answerArea.hidden = true; ui.result.hidden = true;
+        ui.recordForm.hidden = true; ui.question.textContent = '준비됐나요?'; setFeedback('시작 버튼을 눌러 주세요.'); updateCounts();
+        ui.clock.hidden = mode !== 'challenge'; ui.clock.textContent = '남은 시간 60초'; ui.clock.classList.remove('urgent');
+        ui.danWrap.hidden = mode !== 'dan'; ui.leaderboard.hidden = mode !== 'challenge';
+        ui.description.textContent = mode === 'dan' ? '연습할 단을 고르고 시작해 보세요.' : mode === 'random' ? '2단부터 9단까지 차례 없이 나와요. 시간 제한은 없어요.' : '60초 동안 최대한 많이 맞혀 보세요. 끝나면 리더보드에 점수를 올릴 수 있어요.';
+        ui.modeLabel.textContent = mode === 'dan' ? `${dan}단 연습` : mode === 'random' ? '랜덤 연습' : '60초 실전';
+        document.querySelectorAll('.mode').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
+        document.querySelectorAll('.dan').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.dan) === dan)));
+      }
+      function nextQuestion() {
+        let a, b, key;
+        do {
+          a = state.mode === 'dan' ? state.dan : 2 + Math.floor(Math.random() * 8);
+          b = 1 + Math.floor(Math.random() * 9);
+          key = `${a}-${b}`;
+        } while (key === state.previous);
+        state.previous = key; state.question = { a, b, answer: a * b };
+        ui.question.textContent = `${a} × ${b} = ?`;
+        ui.answer.value = '';
+      }
+      function startRound() {
+        clearInterval(state.timer); state.timer = null; state.round++;
+        state.correct = 0; state.wrong = 0; state.previous = ''; state.finished = false;
+        state.active = true; state.saving = false; state.saved = false;
+        updateCounts(); ui.start.hidden = true; ui.result.hidden = true; ui.recordForm.hidden = true;
+        ui.answerArea.hidden = false; setFeedback('답을 입력하고 확인을 눌러 주세요.'); nextQuestion();
+        if (state.mode === 'challenge') {
+          state.endAt = Date.now() + 60000;
+          tick(); state.timer = setInterval(tick, 100);
+        }
+      }
+      function tick() {
+        if (!state.active || state.mode !== 'challenge') return;
+        const left = Math.max(0, state.endAt - Date.now());
+        ui.clock.textContent = `남은 시간 ${Math.ceil(left / 1000)}초`;
+        ui.clock.classList.toggle('urgent', left <= 10000);
+        if (left === 0) finishRound();
+      }
+      function finishRound() {
+        if (!state.active || state.mode !== 'challenge') return;
+        clearInterval(state.timer); state.timer = null; state.active = false; state.finished = true;
+        ui.clock.textContent = '남은 시간 0초'; ui.question.textContent = '60초 완료!';
+        ui.answerArea.hidden = true; ui.start.hidden = false; ui.start.textContent = '다시 도전하기';
+        ui.resultTitle.textContent = '실전 종료!';
+        ui.resultDetail.textContent = `${state.correct}문제 정답 · ${state.wrong}문제 오답`;
+        ui.result.hidden = false; ui.recordForm.hidden = false;
+        ui.saveMessage.textContent = firestore ? '' : '연결 중이에요. 연결되면 점수를 등록할 수 있어요.';
+        ui.save.disabled = !firestore; setFeedback('수고했어요! 이름을 입력하면 점수를 등록할 수 있어요.');
+      }
+      function checkAnswer() {
+        if (!state.active) return;
+        if (state.mode === 'challenge' && Date.now() >= state.endAt) { finishRound(); return; }
+        const raw = ui.answer.value.trim();
+        if (!/^\d{1,3}$/.test(raw)) { setFeedback('숫자로 답을 입력해 주세요.', true); return; }
+        const expected = state.question.answer;
+        if (Number(raw) === expected) { state.correct++; setFeedback('정답! 잘했어요!'); }
+        else { state.wrong++; setFeedback(`아쉬워요! 정답은 ${expected}예요.`, true); }
+        updateCounts(); nextQuestion();
+      }
+      function renderRanking(snapshot) {
+        ui.ranking.replaceChildren();
+        snapshot.docs.forEach((entry, index) => {
+          const data = entry.data();
+          const row = document.createElement('li');
+          const rank = document.createElement('span'); rank.className = 'rank'; rank.textContent = `${index + 1}`;
+          const name = document.createElement('span'); name.className = 'name'; name.textContent = typeof data.nickname === 'string' ? data.nickname : '이름 없음';
+          const points = document.createElement('span'); points.className = 'points'; points.textContent = `${Number.isInteger(data.score) ? data.score : 0}점`;
+          row.append(rank, name, points); ui.ranking.append(row);
+        });
+        ui.rankingEmpty.hidden = snapshot.docs.length !== 0;
+        if (!snapshot.docs.length) ui.rankingEmpty.textContent = '아직 등록된 점수가 없어요. 첫 번째 주인공이 되어 보세요!';
+        ui.connection.textContent = snapshot.metadata.fromCache ? '저장된 목록을 표시 중 · 최신 순위를 확인하려면 인터넷에 연결하세요.' : '실시간 순위 · 점수 높은 순';
+      }
+      function showFirebaseError(error, fallback) {
+        const code = error && error.code;
+        if (code === 'permission-denied') return 'Firestore 접근이 거부됐어요. leaderboard 규칙과 게시 상태를 확인해 주세요.';
+        if (code === 'failed-precondition') return 'Firestore 설정이 필요해요. 오류 내용과 데이터베이스 상태를 확인해 주세요.';
+        if (code === 'unavailable') return 'Firebase 서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.';
+        return `${fallback}${error && error.message ? ` (${String(error.message).slice(0, 120)})` : ''}`;
+      }
+      async function connectFirebase() {
+        try {
+          // 단일 HTML이므로 별도 빌드 도구 없이 Firebase의 브라우저용 ESM SDK를 가져옵니다.
+          const [{ initializeApp }, fs] = await Promise.all([
+            import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+            import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+          ]);
+          const app = initializeApp(firebaseConfig);
+          const db = fs.getFirestore(app);
+          firestore = { db, fs };
+          if (state.finished && state.mode === 'challenge' && !state.saved) { ui.save.disabled = false; ui.saveMessage.textContent = ''; }
+          ui.connection.textContent = '실시간 순위를 연결하는 중…';
+          listenRanking();
+        } catch (error) {
+          ui.connection.textContent = showFirebaseError(error, 'Firebase SDK를 불러오지 못했어요. 인터넷에 연결한 뒤 페이지를 새로고침해 주세요.');
+          ui.rankingEmpty.textContent = '순위를 표시할 수 없어요. 구구단 연습은 계속할 수 있어요.';
+          if (state.finished && state.mode === 'challenge') ui.saveMessage.textContent = 'Firebase에 연결하지 못했어요. 인터넷에 연결한 뒤 페이지를 새로고침해 주세요.';
+        }
+      }
+      function listenRanking() {
+        if (!firestore) return;
+        if (liveUnsubscribe) { liveUnsubscribe(); liveUnsubscribe = null; }
+        const { db, fs } = firestore;
+        const top20 = fs.query(fs.collection(db, 'leaderboard'), fs.orderBy('score', 'desc'), fs.limit(20));
+        liveUnsubscribe = fs.onSnapshot(top20, renderRanking, (error) => {
+          ui.connection.textContent = showFirebaseError(error, '순위를 불러오지 못했어요.');
+          if (!ui.ranking.children.length) ui.rankingEmpty.textContent = '순위를 표시할 수 없어요.';
+        });
+      }
+      async function saveRecord(event) {
+        event.preventDefault();
+        if (!state.finished || state.active || state.mode !== 'challenge' || state.saving || state.saved) return;
+        const nickname = ui.nickname.value.trim();
+        if (!nameRule.test(nickname)) { ui.saveMessage.textContent = '이름은 한글·영문·숫자로 시작하고, 전체 1~12글자여야 해요.'; ui.nickname.focus(); return; }
+        if (!firestore) { ui.saveMessage.textContent = 'Firebase 연결 전이에요. 인터넷을 확인해 주세요.'; return; }
+        const round = state.round;
+        const { db, fs } = firestore;
+        state.saving = true; ui.save.disabled = true; ui.saveMessage.textContent = '점수를 등록하는 중…';
+        try {
+          await fs.addDoc(fs.collection(db, 'leaderboard'), {
+            nickname, score: state.correct, mode: '실전', createdAt: fs.serverTimestamp()
+          });
+          if (round !== state.round || state.mode !== 'challenge') return;
+          state.saved = true; ui.save.textContent = '등록 완료';
+          ui.saveMessage.textContent = '점수가 등록됐어요! 상위 20개에 들면 리더보드에 나타나요.';
+          try { localStorage.setItem('gugudan-nickname', nickname); } catch (_) { /* 저장 제한 환경에서는 생략 */ }
+        } catch (error) {
+          if (round === state.round && state.mode === 'challenge') ui.saveMessage.textContent = showFirebaseError(error, '점수를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        } finally {
+          if (round === state.round && state.mode === 'challenge') {
+            state.saving = false;
+            if (!state.saved) ui.save.disabled = false;
+          }
+        }
+      }
+      for (let dan = 2; dan <= 9; dan++) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'dan'; button.dataset.dan = String(dan); button.textContent = `${dan}단`;
+        button.setAttribute('aria-pressed', String(dan === 2));
+        button.addEventListener('click', () => selectMode('dan', dan));
+        ui.danWrap.append(button);
+      }
+      document.querySelectorAll('.mode').forEach((button) => button.addEventListener('click', () => selectMode(button.dataset.mode)));
+      ui.start.addEventListener('click', startRound);
+      $('submit-answer').addEventListener('click', checkAnswer);
+      ui.answer.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); checkAnswer(); } });
+      ui.answer.addEventListener('input', () => { ui.answer.value = ui.answer.value.replace(/[^0-9]/g, '').slice(0, 3); });
+      $('keypad').addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-key]');
+        if (!button || !state.active) return;
+        const key = button.dataset.key;
+        if (key === 'clear') ui.answer.value = '';
+        else if (key === 'back') ui.answer.value = ui.answer.value.slice(0, -1);
+        else ui.answer.value = (ui.answer.value + key).slice(0, 3);
+      });
+      ui.recordForm.addEventListener('submit', saveRecord);
+      $('refresh').addEventListener('click', () => { if (firestore) { ui.connection.textContent = '순위를 다시 연결하는 중…'; listenRanking(); } else { ui.connection.textContent = 'Firebase에 다시 연결하는 중…'; connectFirebase(); } });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+      try { ui.nickname.value = localStorage.getItem('gugudan-nickname') || ''; } catch (_) { /* 저장 제한 환경에서는 생략 */ }
+      selectMode('dan', 2);
+      connectFirebase();
+    })();
+  </script>
+</body>
+</html>
